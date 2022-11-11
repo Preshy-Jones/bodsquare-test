@@ -1,17 +1,18 @@
 const express = require("express");
-import { AuthorizationError } from "../../errors";
+import { AuthorizationError, ServiceError } from "../../errors";
 
 import { Request, Response, NextFunction } from "express";
-import { Task } from "../../models/Task";
-import { Publisher } from "../../utils/publisher";
+const { models } = require("../../db");
+import { Publish } from "../../utils/publisher";
+import { io } from "socket.io-client";
 
 export const getTask = async (req: Request, res: Response) => {
-  const task = await Task.findById(req.params.id);
+  const task = await models["Task"].findByPk(req.params.id);
   res.json({ task });
 };
 
 export const saveTask = async (req: any, res: Response, next: NextFunction) => {
-  req.task = new Task();
+  req.task = models["Task"].build();
   next();
 };
 
@@ -20,14 +21,14 @@ export const updateTask = async (
   res: Response,
   next: NextFunction
 ) => {
-  req.task = await Task.findById(req.params.id);
+  req.task = await models["Task"].findByPk(req.params.id);
   next();
 };
 
 export const getAllTasks = async (req: Request, res: Response) => {
   try {
-    const tasks = await Task.find().sort({
-      createdAt: "desc",
+    const tasks = await models["Task"].findAll({
+      order: [["createdAt", "desc"]],
     });
     console.log(tasks);
 
@@ -37,33 +38,44 @@ export const getAllTasks = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteTask = async (req: any, res: Response) => {
+export const deleteTask = async (
+  req: any,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const task = await Task.findById(req.params.id);
-    if (task && task.userId !== req.user._id.toString()) {
+    const task = await models["Task"].findByPk(req.params.id);
+    console.log(task);
+
+    if (task && task.userId !== req.user.id.toString()) {
       throw new AuthorizationError(
         "You are not authorized to delete this task"
       );
     } else {
-      await Task.findByIdAndDelete(req.params.id);
+      await models["Task"].destroy({
+        where: {
+          id: req.params.id,
+        },
+      });
       res.status(200).json({ message: "Task deleted successfully" });
     }
   } catch (error) {
-    res.json({ error: error });
+    next(error);
   }
 };
 
 export const handleTask = (operation: string) => {
   return async (req: any, res: Response, next: NextFunction) => {
+    const socket = io("http://localhost:4000");
     let task = req.task;
-    task.userId = req.user._id;
+    task.userId = req.user.id;
     task.title = req.body.title;
     task.description = req.body.description;
 
-    Publisher("tasks", task);
-
     try {
-      task = await task.save();
+      Publish("tasks", task);
+      socket.emit("newTask");
+      // task = await task.save();
       res.json({
         message: `Task ${
           operation === "update" ? "updated" : "created"

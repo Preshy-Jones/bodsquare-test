@@ -1,9 +1,10 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import passport from "passport";
+const { models } = require("../../db");
 
 import { Request, Response, NextFunction } from "express";
-import User from "../../models/User";
+// import User from "../../models/User";
 
 const { generateJWTToken } = require("../../utils");
 const {
@@ -40,12 +41,12 @@ module.exports.register = async (
     if (errors.length > 0) {
       throw new ValidationError(errors);
     }
-    const user = await User.findOne({ email: email });
+    const user = await models["User"].findOne({ where: { email: email } });
     if (user) {
       // errors.push({ message: "Email is already registered" });
       throw new ConflictError("Email is already registered");
     } else {
-      const newUser = new User({
+      const newUser = models["User"].build({
         name,
         email,
         password,
@@ -68,7 +69,7 @@ module.exports.register = async (
 
             .catch((err: any) => {
               throw new ServiceError(err);
-              console.log(err);
+              // console.log(err);
             });
         })
       );
@@ -88,7 +89,7 @@ module.exports.login = async (
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ email: email });
+    const user = await models["User"].findOne({ where: { email: email } });
 
     if (!user) {
       // return res
@@ -146,7 +147,7 @@ module.exports.login = async (
   }
 };
 
-module.exports.logout = (req: Request, res: Response, next: NextFunction) => {};
+
 
 module.exports.handleRefreshToken = async (
   req: Request,
@@ -160,8 +161,8 @@ module.exports.handleRefreshToken = async (
     if (!cookies?.jwt) throw new AuthenticationError("No refresh token found");
 
     const refreshToken = cookies.jwt;
-
-    const foundUser = await User.findOne({ refreshToken }).exec();
+    const foundUser = await models["User"].findOne({ where: { refreshToken: refreshToken } });
+    // const foundUser = await User.findOne({ refreshToken }).exec();
     // console.log(foundUser);
     if (!foundUser) return res.sendStatus(403); //Forbidden
     // evaluate jwt

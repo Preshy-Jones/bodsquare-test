@@ -1,6 +1,7 @@
 import Passport from "passport";
 import dotenv from "dotenv";
-import User from "../models/User";
+const { models } = require("../db");
+
 const JwtStrategy = require("passport-jwt").Strategy,
   ExtractJwt = require("passport-jwt").ExtractJwt;
 
@@ -13,7 +14,9 @@ Passport.use(
   new JwtStrategy(opts, async function (jwt_payload: any, done: any) {
     console.log(jwt_payload);
     try {
-      const user = await User.findOne({ _id: jwt_payload.id });
+      const user = await models["User"].findOne({
+        where: { id: jwt_payload.id },
+      });
       if (user) {
         // console.log(user);
         return done(null, user);

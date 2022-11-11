@@ -1,6 +1,6 @@
 import amqp from "amqplib";
 
-const connect = async (data:any) => {
+const connect = async (data: any) => {
   try {
     const amqpServer = process.env.RABBITMQ_URL!;
     const connection = await amqp.connect(amqpServer);
@@ -8,11 +8,12 @@ const connect = async (data:any) => {
     await channel.assertQueue("jobs");
 
     channel.consume(data, (message) => {
+      //@ts-ignore
       const input = JSON.parse(message.content.toString());
       console.log(`Recieved job with input ${input.number}`);
       //"7" == 7 true
       //"7" === 7 false
-
+      //@ts-ignore
       if (input.number == 7) channel.ack(message);
     });
 

@@ -6,19 +6,10 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 import passport from "passport";
 import { ErrorHandler, NotFoundHandler } from "./middlewares";
-import mongoose, { ConnectOptions } from "mongoose";
-const http = require("http");
-const socketio = require("socket.io");
+import db from "./db/database";
+
 const app: Application = express();
 
-const server = http.createServer(app);
-
-const io = socketio(server);
-
-//connect to io
-io.on("connection", (socket: any) => {
-  console.log("New WebSocket connection");
-});
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
@@ -57,24 +48,35 @@ const port = process.env.PORT || 8008;
 app.use(NotFoundHandler);
 app.use(ErrorHandler);
 
-const mongooseConnect = async () => {
-  console.log(process.env.DB_CONNECT);
+// const mongooseConnect = async () => {
+//   console.log(process.env.DB_CONNECT);
 
+//   try {
+//     await mongoose.connect(process.env.DB_CONNECT!, {
+//       useNewUrlParser: true,
+//       useUnifiedTopology: true,
+//       // useCreateIndex: true,
+//       // useFindAndModify: false,
+//     } as ConnectOptions);
+//     console.log("connected to mongodb");
+//   } catch (error) {
+//     console.log(error);
+//   }
+// };
+
+// mongooseConnect();
+
+const dbConnect = async () => {
   try {
-    await mongoose.connect(process.env.DB_CONNECT!, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      // useCreateIndex: true,
-      // useFindAndModify: false,
-    } as ConnectOptions);
-    console.log("connected to mongodb");
+    await db.authenticate();
+    console.log("Connection has been established successfully.");
   } catch (error) {
-    console.log(error);
+    console.error("Unable to connect to the database:", error);
   }
 };
 
-mongooseConnect();
+dbConnect();
 
-server.listen(port, () => {
+app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });

@@ -20,4 +20,4 @@ const connect = async (queueName: string, payload: any) => {
 };
 
 //export connect() as Publisher vairable
-export { connect as Publisher };
+export { connect as Publish };
