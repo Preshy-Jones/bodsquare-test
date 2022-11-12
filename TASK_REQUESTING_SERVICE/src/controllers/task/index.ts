@@ -5,6 +5,8 @@ import { Request, Response, NextFunction } from "express";
 const { models } = require("../../db");
 import { Publish } from "../../utils/publisher";
 import { io } from "socket.io-client";
+const Producer = require("../../utils/Producer");
+const producer = new Producer();
 
 export const getTask = async (req: Request, res: Response) => {
   const task = await models["Task"].findByPk(req.params.id);
@@ -67,13 +69,14 @@ export const deleteTask = async (
 export const handleTask = (operation: string) => {
   return async (req: any, res: Response, next: NextFunction) => {
     const socket = io("http://localhost:4000");
-    let task = req.task;
+    let task = { userId: "", description: "", title: "" };
     task.userId = req.user.id;
     task.title = req.body.title;
     task.description = req.body.description;
 
     try {
-      Publish("tasks", task);
+      await producer.publishMessage("Task", task);
+      // await Publish("tasks", task);
       socket.emit("newTask");
       // task = await task.save();
       res.json({
