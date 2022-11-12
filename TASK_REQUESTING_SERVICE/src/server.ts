@@ -6,14 +6,14 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 import passport from "passport";
 import { ErrorHandler, NotFoundHandler } from "./middlewares";
-import db from "./db/database";
+import {db} from "./db/database";
 
 const app: Application = express();
 
+dotenv.config();
+
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
-
-dotenv.config({ path: path.join(__dirname, ".env") });
 
 app.use(logger);
 

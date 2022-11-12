@@ -2,7 +2,7 @@ import express, { Application } from "express";
 import path from "path";
 import dotenv from "dotenv";
 import { Consume } from "./utils/consumer";
-import db from "./db/database";
+const { db } = require("./db/database");
 const http = require("http");
 const socketio = require("socket.io");
 
@@ -19,7 +19,7 @@ io.on("connection", (socket: any) => {
   });
 });
 
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 8008;
 
 const dbConnect = async () => {
   try {
@@ -35,4 +35,3 @@ dbConnect();
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
-
