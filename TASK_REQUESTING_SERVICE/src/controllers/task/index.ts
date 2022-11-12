@@ -3,7 +3,6 @@ import { AuthorizationError, ServiceError } from "../../errors";
 
 import { Request, Response, NextFunction } from "express";
 const { models } = require("../../db");
-import { Publish } from "../../utils/publisher";
 import { io } from "socket.io-client";
 const Producer = require("../../utils/Producer");
 const producer = new Producer();
@@ -47,6 +46,10 @@ export const deleteTask = async (
 ) => {
   try {
     const task = await models["Task"].findByPk(req.params.id);
+
+    if (!task) {
+      throw new ServiceError("Task not found");
+    }
     console.log(task);
 
     if (task && task.userId !== req.user.id.toString()) {
@@ -69,21 +72,28 @@ export const deleteTask = async (
 export const handleTask = (operation: string) => {
   return async (req: any, res: Response, next: NextFunction) => {
     const socket = io("http://localhost:4000");
-    let task = { userId: "", description: "", title: "" };
+    let task = req.task;
     task.userId = req.user.id;
     task.title = req.body.title;
     task.description = req.body.description;
 
     try {
-      await producer.publishMessage("Task", task);
-      // await Publish("tasks", task);
+      //update task
+      if (operation === "update") {
+        task = await task.save();
+        return res.json({
+          message: `Task updated successfully`,
+          task,
+        });
+      }
+      console.log(operation);
+
+      //save task
       socket.emit("newTask");
-      // task = await task.save();
-      res.json({
-        message: `Task ${
-          operation === "update" ? "updated" : "created"
-        } successfully`,
-        task,
+      await producer.publishMessage("Task", task);
+      return res.json({
+        message: `Task created successfully`,
+        // task,
       });
     } catch (error) {
       // res.render(`articles/${path}`, { post: post });

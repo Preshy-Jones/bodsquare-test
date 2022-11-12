@@ -1,4 +1,7 @@
 const amqp = require("amqplib");
+import dotenv from "dotenv";
+
+dotenv.config();
 
 //step 1 : Connect to the rabbitmq server
 //step 2 : Create a new channel on that connection
@@ -9,7 +12,7 @@ class Producer {
   channel: any;
 
   async createChannel() {
-    const connection = await amqp.connect("amqp://localhost:5672");
+    const connection = await amqp.connect(process.env.RABBITMQ_URL);
     this.channel = await connection.createChannel();
   }
 

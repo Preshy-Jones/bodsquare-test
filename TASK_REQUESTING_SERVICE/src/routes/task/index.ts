@@ -15,7 +15,7 @@ const router = express.Router();
 
 router.get("/:id", getTask);
 router.post("/", ensureAuthenticated, saveTask, handleTask("new"));
-router.put("/:id", ensureAuthenticated, updateTask, handleTask("edit"));
+router.put("/:id", ensureAuthenticated, updateTask, handleTask("update"));
 router.get("/", getAllTasks);
 router.delete("/:id", ensureAuthenticated, deleteTask);
 
