@@ -147,8 +147,6 @@ module.exports.login = async (
   }
 };
 
-
-
 module.exports.handleRefreshToken = async (
   req: Request,
   res: Response,
@@ -161,7 +159,9 @@ module.exports.handleRefreshToken = async (
     if (!cookies?.jwt) throw new AuthenticationError("No refresh token found");
 
     const refreshToken = cookies.jwt;
-    const foundUser = await models["User"].findOne({ where: { refreshToken: refreshToken } });
+    const foundUser = await models["User"].findOne({
+      where: { refreshToken: refreshToken },
+    });
     // const foundUser = await User.findOne({ refreshToken }).exec();
     // console.log(foundUser);
     if (!foundUser) return res.sendStatus(403); //Forbidden
@@ -176,11 +176,11 @@ module.exports.handleRefreshToken = async (
         if (err || foundUser.email !== decoded.email)
           return res.sendStatus(403);
         const payload = {
-          id: foundUser._id,
+          id: foundUser.id,
           email: foundUser.email,
         };
         const accessToken = jwt.sign({ ...payload }, process.env.JWT_SECRET!, {
-          expiresIn: "20s",
+          expiresIn: "8h",
         });
         res.json({ accessToken });
       }

@@ -1,10 +1,13 @@
 const express = require("express");
 import { AuthorizationError, ServiceError } from "../../errors";
-
+import dotenv from "dotenv";
 import { Request, Response, NextFunction } from "express";
 const { models } = require("../../db");
 import { io } from "socket.io-client";
 const Producer = require("../../utils/Producer");
+
+dotenv.config();
+
 const producer = new Producer();
 
 export const getTask = async (req: Request, res: Response) => {
@@ -71,7 +74,7 @@ export const deleteTask = async (
 
 export const handleTask = (operation: string) => {
   return async (req: any, res: Response, next: NextFunction) => {
-    const socket = io("http://localhost:4000");
+    const socket = io(process.env.TASK_SAVING_SERVICE_URL!);
     let task = req.task;
     task.userId = req.user.id;
     task.title = req.body.title;
